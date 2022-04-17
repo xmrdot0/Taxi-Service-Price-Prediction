@@ -4,6 +4,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import mean_squared_error
+from sklearn.metrics import accuracy_score
 
 
 
@@ -53,6 +54,13 @@ data = taxi_rides.merge(destination_weather, on ='destination')
 
 # Preprocessing data
 
+def onehot_encode(df, column, prefix):
+    df = df.copy()
+    dummies = pd.get_dummies(df[column], prefix=prefix)
+    df = pd.concat([df,dummies], axis=1)
+    df = df.drop(column,axis=1)
+    return df
+
 def preprocess_inputs(X):
     X = X.copy()
 
@@ -67,11 +75,15 @@ def preprocess_inputs(X):
         }
     )
 
-    # Encoding categorical columns
-    for c in ['destination', 'source', 'product_id', 'name']:
-        lbl = LabelEncoder()
-        lbl.fit(list(X[c].values))
-        X[c] = lbl.transform(list(X[c].values))
+    # Label Encoding categorical columns
+    # for c in ['destination', 'source', 'product_id', 'name']:
+    #     lbl = LabelEncoder()
+    #     lbl.fit(list(X[c].values))
+    #     X[c] = lbl.transform(list(X[c].values))
+
+    # One Hot Encoding categorical columns
+    for column, prefix in [('destination', 'dest'), ('source','src'), ('product_id','pid'), ('name','nm')]:
+        X = onehot_encode(X, column=column, prefix=prefix)
 
     y = X['price']
     x = X.drop('price', axis=1)
@@ -94,4 +106,7 @@ y_prediction =  LR.predict(X_test)
 
 
 print(mean_squared_error(Y_test, y_prediction))
+
+print(LR.score(X_test, Y_test))
+
 
